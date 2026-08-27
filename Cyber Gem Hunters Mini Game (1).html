@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cyber Gem Hunters - Celestial Goddess Edition</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #050710;
+            color: #ffffff;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .font-orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .neon-border-white {
+            box-shadow: 0 0 15px rgba(248, 250, 252, 0.4);
+            border: 1px solid rgba(248, 250, 252, 0.6);
+        }
+
+        .neon-border-red {
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+            border: 1px solid rgba(239, 68, 68, 0.6);
+        }
+
+        .neon-border-purple {
+            box-shadow: 0 0 18px rgba(168, 85, 247, 0.5);
+            border: 1px solid rgba(168, 85, 247, 0.8);
+        }
+
+        .glass-panel {
+            background: rgba(13, 16, 30, 0.85);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.2);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #a855f7;
+            border-radius: 4px;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(168, 85, 247, 0.6)); }
+            50% { transform: scale(1.04); filter: drop-shadow(0 0 20px rgba(168, 85, 247, 0.9)); }
+        }
+
+        .character-glow {
+            animation: pulse-glow 3s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex flex-col justify-between items-center max-w-md mx-auto relative bg-gradient-to-b from-slate-950 via-purple-950 to-slate-950">
+
+    <!-- HEADER / STATUS BAR -->
+    <header class="w-full px-3 pt-3 pb-2 glass-panel z-20 flex justify-between items-center border-b border-white/10 shadow-lg">
+        <!-- Avatar & Character Info -->
+        <div class="flex items-center space-x-2.5">
+            <div id="topAvatarContainer" class="w-10 h-10 rounded-full border-2 border-slate-200 overflow-hidden bg-slate-900 flex items-center justify-center relative shadow-md">
+                <div id="topAvatarVisual" class="text-xl">🤍</div>
+            </div>
+            <div>
+                <div class="text-xs text-amber-300 font-bold tracking-wide flex items-center gap-1">
+                    <span id="playerActiveTierTag" class="bg-amber-500/20 px-1 py-0.5 rounded text-[9px] border border-amber-500/50 font-orbitron">STEP 1</span>
+                    <span id="playerActiveName" class="text-white font-semibold">Bai Lian</span>
+                </div>
+                <div class="text-[9px] text-gray-400 mt-0.5"><span data-i18n="bonus_earning">Bonus</span>: <span id="topMultiplierText" class="text-emerald-400 font-bold font-orbitron">1.2x</span></div>
+            </div>
+        </div>
+
+        <!-- Language Selector & Balance -->
+        <div class="flex items-center space-x-2">
+            <!-- Language Selector -->
+            <select id="langSelect" onchange="changeLanguage(this.value)" class="bg-slate-900 border border-purple-500/50 text-[10px] text-purple-300 rounded-lg px-1.5 py-1 focus:outline-none">
+                <option value="id">🇮🇩 ID</option>
+                <option value="en">🇺🇸 EN</option>
+                <option value="ru">🇷🇺 RU</option>
+                <option value="es">🇪🇸 ES</option>
+                <option value="pt">🇧🇷 PT</option>
+                <option value="zh">🇨🇳 ZH</option>
+            </select>
+
+            <!-- Real USD Balance -->
+            <div class="flex items-center space-x-0.5 bg-emerald-950/80 border border-emerald-500/60 px-2.5 py-1 rounded-full text-emerald-300 font-orbitron font-bold text-xs shadow-inner">
+                <i data-lucide="dollar-sign" class="w-3 h-3 text-emerald-400"></i>
+                <span id="realUsdBalance">0.00</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN VIEWPORTS -->
+    <main class="w-full flex-1 relative overflow-hidden flex flex-col">
+        
+        <!-- GAME TAB -->
+        <section id="tab-game" class="w-full h-full flex flex-col items-center justify-between p-3 relative">
+            <div class="w-full flex-1 relative rounded-2xl overflow-hidden border border-purple-500/30 shadow-2xl bg-slate-950 flex flex-col items-center justify-center">
+                
+                <canvas id="gameCanvas" class="w-full h-full block"></canvas>
+
+                <!-- Overlay Game Start -->
+                <div id="gameStartOverlay" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-10">
+                    <div class="w-16 h-16 rounded-full bg-purple-500/20 border-2 border-purple-400 flex items-center justify-center mb-3 animate-bounce shadow-lg shadow-purple-500/30">
+                        <i data-lucide="sparkles" class="w-8 h-8 text-purple-300"></i>
+                    </div>
+                    <h2 class="font-orbitron text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-pink-300 to-purple-400 mb-1">
+                        CELESTIAL RUNNER
+                    </h2>
+                    <p data-i18n="game_desc" class="text-xs text-gray-300 mb-5 max-w-[250px] leading-relaxed">
+                        Kendalikan dewi cantik pilihanmu, lompati rintangan, kumpulkan Cyber Gems & tukar ke Uang Nyata (USDT)!
+                    </p>
+                    
+                    <button id="startGameBtn" class="w-full max-w-xs py-3.5 bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 text-white font-orbitron font-bold rounded-xl shadow-lg shadow-purple-500/30 active:scale-95 transition-all text-xs tracking-wider flex items-center justify-center gap-2">
+                        <i data-lucide="zap" class="w-4 h-4"></i> <span data-i18n="btn_start">MULAI PETUALANGAN</span>
+                    </button>
+                    
+                    <div class="mt-4 flex items-center justify-center gap-2 text-[10px] text-gray-400 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
+                        <span data-i18n="control_hint">Kontrol: Ketuk Layar / Spasi</span>
+                    </div>
+                </div>
+
+                <!-- Overlay Game Over -->
+                <div id="gameOverOverlay" class="hidden absolute inset-0 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-10">
+                    <div class="w-12 h-12 rounded-full bg-red-500/20 border border-red-500 flex items-center justify-center mb-2">
+                        <i data-lucide="x-circle" class="w-6 h-6 text-red-400"></i>
+                    </div>
+                    <h3 data-i18n="game_over" class="font-orbitron text-base font-bold text-red-400 mb-1">TANTANGAN SELESAI</h3>
+                    
+                    <div class="w-full max-w-xs glass-panel rounded-xl p-3.5 my-3 space-y-2 border border-white/10 text-xs">
+                        <div class="flex justify-between text-gray-300">
+                            <span data-i18n="distance">Jarak Tempuh:</span>
+                            <span id="resDistance" class="font-bold text-white font-orbitron">0 m</span>
+                        </div>
+                        <div class="flex justify-between text-gray-300">
+                            <span>Gems:</span>
+                            <span id="resGems" class="font-bold text-purple-400 font-orbitron">0</span>
+                        </div>
+                        <div class="flex justify-between text-emerald-400 font-bold border-t border-white/10 pt-2 text-sm">
+                            <span data-i18n="cash_earned">Hasil Cash:</span>
+                            <span id="resCash" class="font-orbitron">+$0.00 USDT</span>
+                        </div>
+                    </div>
+
+                    <button id="restartGameBtn" class="w-full max-w-xs py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-orbitron font-bold rounded-xl shadow-lg active:scale-95 transition-all text-xs flex items-center justify-center gap-2">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i> <span data-i18n="btn_play_again">MAIN LAGI</span>
+                    </button>
+                </div>
+            </div>
+
+            <button id="canvasJumpBtn" class="w-full mt-2 py-3 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/50 rounded-xl text-purple-300 font-orbitron text-xs font-bold active:bg-purple-500/40 flex items-center justify-center gap-1.5 shadow-md">
+                <i data-lucide="arrow-big-up" class="w-4 h-4 text-purple-400"></i> <span data-i18n="btn_tap_jump">TEKAN UNTUK MELOMPAT</span>
+            </button>
+        </section>
+
+        <!-- CHARACTERS SHOP TAB -->
+        <section id="tab-shop" class="hidden w-full h-full p-4 overflow-y-auto custom-scrollbar flex-col space-y-4">
+            <div class="text-center mb-1">
+                <h2 data-i18n="shop_title" class="font-orbitron text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-pink-300 to-purple-400">
+                    SQUAD DEWI ORIENTAL
+                </h2>
+                <p data-i18n="shop_subtitle" class="text-xs text-gray-400">Pilih karakter favoritmu untuk melipatgandakan penghasilan USDT!</p>
+            </div>
+
+            <!-- Step 1: Bai Lian (White Silk Goddess) -->
+            <div class="glass-panel rounded-2xl p-3.5 neon-border-white relative overflow-hidden flex flex-col sm:flex-row items-center gap-4">
+                <div class="w-24 h-32 rounded-xl bg-gradient-to-b from-slate-200/30 via-slate-800 to-slate-950 flex flex-col items-center justify-center border border-slate-300/50 shrink-0 shadow-lg relative">
+                    <div class="text-4xl character-glow mb-1">🤍</div>
+                    <span class="text-[9px] bg-slate-200 text-slate-950 font-extrabold px-2 py-0.5 rounded-full font-orbitron shadow">STEP 1</span>
+                </div>
+                <div class="flex-1 w-full space-y-1 text-center sm:text-left">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-orbitron font-bold text-slate-100 text-sm">BAI LIAN - CELESTIAL</h3>
+                        <span class="text-xs font-bold text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-500/50 font-orbitron">$2.00 USD</span>
+                    </div>
+                    <p data-i18n="char1_desc" class="text-[11px] text-gray-300">Dewi rembulan bergaun sutra putih-emas bersinar dengan aura ethereal lincah.</p>
+                    <div class="text-[11px] text-purple-300 font-semibold pt-1">
+                        ⚡ Profit Multiplier: <span class="text-emerald-400 font-bold font-orbitron">1.2x Earning</span>
+                    </div>
+                    <div class="pt-2">
+                        <button id="btnBuyStep1" onclick="openDepositModal(2.00, 'Bai Lian - Celestial Goddess')" class="w-full py-2 bg-slate-200 hover:bg-white text-slate-950 font-orbitron font-extrabold rounded-lg text-xs shadow-md">
+                            <span data-i18n="btn_buy">BELI SEHARGA</span> $2.00 (BNB/GRAM)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Hong Yan (Crimson Shadow Warrior) -->
+            <div class="glass-panel rounded-2xl p-3.5 neon-border-red relative overflow-hidden flex flex-col sm:flex-row items-center gap-4">
+                <div class="w-24 h-32 rounded-xl bg-gradient-to-b from-red-600/30 via-red-950 to-slate-950 flex flex-col items-center justify-center border border-red-500/50 shrink-0 shadow-lg">
+                    <div class="text-4xl character-glow mb-1">⚔️</div>
+                    <span class="text-[9px] bg-red-600 text-white font-extrabold px-2 py-0.5 rounded-full font-orbitron shadow">STEP 2</span>
+                </div>
+                <div class="flex-1 w-full space-y-1 text-center sm:text-left">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-orbitron font-bold text-red-400 text-sm">HONG YAN - WARRIOR</h3>
+                        <span class="text-xs font-bold text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-500/50 font-orbitron">$3.50 USD</span>
+                    </div>
+                    <p data-i18n="char2_desc" class="text-[11px] text-gray-300">Pendekar bergaun armor merah-hitam berani berhiaskan pedang emas agung.</p>
+                    <div class="text-[11px] text-purple-300 font-semibold pt-1">
+                        ⚡ Profit Multiplier: <span class="text-emerald-400 font-bold font-orbitron">1.8x Earning</span>
+                    </div>
+                    <div class="pt-2">
+                        <button id="btnBuyStep2" onclick="openDepositModal(3.50, 'Hong Yan - Crimson Warrior')" class="w-full py-2 bg-gradient-to-r from-red-600 to-amber-600 text-white font-orbitron font-bold rounded-lg text-xs shadow-lg">
+                            <span data-i18n="btn_buy">BELI SEHARGA</span> $3.50 (BNB/GRAM)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Zi Yue (Lavender Blossom Empress) -->
+            <div class="glass-panel rounded-2xl p-3.5 neon-border-purple relative overflow-hidden flex flex-col sm:flex-row items-center gap-4">
+                <div class="w-24 h-32 rounded-xl bg-gradient-to-b from-purple-500/30 via-pink-950 to-slate-950 flex flex-col items-center justify-center border border-purple-400/50 shrink-0 shadow-lg">
+                    <div class="text-4xl character-glow mb-1">🪭</div>
+                    <span class="text-[9px] bg-purple-500 text-white font-extrabold px-2 py-0.5 rounded-full font-orbitron shadow">STEP 3</span>
+                </div>
+                <div class="flex-1 w-full space-y-1 text-center sm:text-left">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-orbitron font-bold text-purple-300 text-sm">ZI YUE - LAVENDER EMPRESS</h3>
+                        <span class="text-xs font-bold text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-500/50 font-orbitron">$5.00 USD</span>
+                    </div>
+                    <p data-i18n="char3_desc" class="text-[11px] text-gray-300">Dewi bunga bergaun ungu lavender berkipas sakura. Memberikan profit maksimal!</p>
+                    <div class="text-[11px] text-purple-300 font-semibold pt-1">
+                        ⚡ Profit Multiplier: <span class="text-emerald-400 font-bold font-orbitron">2.5x Earning</span>
+                    </div>
+                    <div class="pt-2">
+                        <button id="btnBuyStep3" onclick="openDepositModal(5.00, 'Zi Yue - Lavender Empress')" class="w-full py-2 bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 text-white font-orbitron font-extrabold rounded-lg text-xs shadow-lg">
+                            <span data-i18n="btn_buy">BELI SEHARGA</span> $5.00 (BNB/GRAM)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- REFERRAL TAB -->
+        <section id="tab-referral" class="hidden w-full h-full p-4 overflow-y-auto custom-scrollbar flex-col space-y-4">
+            <div class="text-center mb-1">
+                <h2 data-i18n="ref_title" class="font-orbitron text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-purple-300 to-indigo-400">
+                    PROGRAM REFERRAL
+                </h2>
+                <p data-i18n="ref_subtitle" class="text-xs text-gray-400">Undang teman terbanyak dan menangkan total bonus ratusan USD!</p>
+            </div>
+
+            <div class="glass-panel p-4 rounded-2xl border border-pink-500/40 space-y-3 bg-gradient-to-b from-pink-950/20 to-slate-950">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <div data-i18n="your_link" class="text-xs font-bold text-pink-300 font-orbitron">LINK UNDANGAN ANDA</div>
+                        <div class="text-[11px] text-gray-400">+<span class="text-emerald-400 font-bold">$1.50 USDT</span> / <span data-i18n="friend">Teman</span></div>
+                    </div>
+                    <div class="text-right">
+                        <div data-i18n="total_invites" class="text-[10px] text-gray-400">Total Undangan:</div>
+                        <div id="referralCountText" class="text-sm font-bold text-white font-orbitron">0</div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <input type="text" id="referralLinkInput" readonly value="https://t.me/CyberGemHuntersBot?start=ref_98421" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-gray-300 focus:outline-none">
+                    <button onclick="copyReferralLink()" class="px-3 py-2 bg-pink-500 hover:bg-pink-400 text-white font-orbitron font-bold text-xs rounded-lg shadow shrink-0">
+                        <span data-i18n="btn_copy">SALIN</span>
+                    </button>
+                </div>
+                
+                <button onclick="simulatedInviteFriend()" class="w-full py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-orbitron font-bold text-xs rounded-xl shadow active:scale-95 transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="share-2" class="w-4 h-4"></i> <span data-i18n="btn_share_tg">BAGIKAN KE TELEGRAM</span>
+                </button>
+            </div>
+
+            <!-- Leaderboard -->
+            <div class="glass-panel p-4 rounded-xl border border-white/10 space-y-3">
+                <div class="flex justify-between items-center border-b border-white/10 pb-2">
+                    <h3 data-i18n="leaderboard_title" class="text-xs font-orbitron text-amber-300 font-bold flex items-center gap-1">
+                        🏆 TOP PENGUNDANG
+                    </h3>
+                    <span class="text-[9px] text-emerald-400 font-bold">RESET: 2 DAYS</span>
+                </div>
+
+                <div class="space-y-2 text-xs">
+                    <div class="flex items-center justify-between bg-white/5 p-2 rounded-lg border border-amber-500/30">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-5 h-5 rounded-full bg-amber-500 text-black font-bold flex items-center justify-center text-[10px] font-orbitron">1</span>
+                            <span class="font-semibold text-gray-200">Alex_Cyber</span>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-bold text-amber-400 font-orbitron">142</div>
+                            <div class="text-[9px] text-emerald-400">+$100.00 USDT</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between bg-white/5 p-2 rounded-lg border border-slate-400/30">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-5 h-5 rounded-full bg-slate-300 text-black font-bold flex items-center justify-center text-[10px] font-orbitron">2</span>
+                            <span class="font-semibold text-gray-200">Vip_Runner88</span>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-bold text-slate-300 font-orbitron">98</div>
+                            <div class="text-[9px] text-emerald-400">+$50.00 USDT</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- EARN TAB -->
+        <section id="tab-earn" class="hidden w-full h-full p-4 overflow-y-auto custom-scrollbar flex-col space-y-3">
+            <div class="text-center mb-1">
+                <h2 data-i18n="tasks_title" class="font-orbitron text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-200">
+                    BONUS KONTINU & TUGAS
+                </h2>
+                <p data-i18n="tasks_subtitle" class="text-xs text-gray-400">Main secara konsisten untuk menambah bonus saldo Uang Nyata!</p>
+            </div>
+
+            <div class="glass-panel p-4 rounded-xl border border-emerald-500/40 flex items-center justify-between shadow-md">
+                <div>
+                    <div data-i18n="daily_checkin" class="text-xs font-bold text-emerald-300">ABSEN HARIAN</div>
+                    <div data-i18n="daily_desc" class="text-[11px] text-gray-300 mt-0.5">Klaim hadiah login harian!</div>
+                    <div class="text-[10px] text-emerald-400 font-orbitron font-bold mt-0.5">+$0.50 USDT</div>
+                </div>
+                <button id="btnDailyClaim" onclick="claimDailyBonus()" class="px-3.5 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-orbitron font-extrabold rounded-lg text-xs shadow-md">
+                    <span data-i18n="btn_claim">KLAIM</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- WALLET TAB & WITHDRAWAL REQUIREMENTS -->
+        <section id="tab-wallet" class="hidden w-full h-full p-4 overflow-y-auto custom-scrollbar flex-col space-y-4">
+            <div class="text-center mb-1">
+                <h2 data-i18n="wallet_title" class="font-orbitron text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-300">
+                    DOMPET & PENARIKAN (USDT)
+                </h2>
+                <p data-i18n="wallet_subtitle" class="text-xs text-gray-400">Tarik hasil bermain game langsung ke dompet crypto USDT Anda!</p>
+            </div>
+
+            <!-- Balance Card -->
+            <div class="glass-panel p-4 rounded-2xl border border-emerald-500/50 text-center relative overflow-hidden bg-gradient-to-b from-emerald-950/50 to-slate-950 shadow-xl">
+                <div data-i18n="total_balance" class="text-[11px] text-emerald-400 font-orbitron tracking-wider">TOTAL SALDO TERKUMPUL</div>
+                <div class="text-3xl font-orbitron font-extrabold text-white my-1 flex items-center justify-center gap-1">
+                    <span class="text-emerald-400">$</span>
+                    <span id="walletBigUsd">0.00</span>
+                    <span class="text-xs text-emerald-400 font-normal">USDT</span>
+                </div>
+                <div class="inline-block bg-emerald-500/10 border border-emerald-500/30 px-3 py-0.5 rounded-full text-[10px] text-emerald-300">
+                    <span data-i18n="min_withdraw">Minimum Penarikan:</span> <span class="text-white font-bold font-orbitron">$50.00 USDT</span>
+                </div>
+            </div>
+
+            <!-- WITHDRAWAL RULES (S&K) -->
+            <div class="glass-panel p-3.5 rounded-xl border border-amber-500/40 space-y-2 bg-gradient-to-r from-amber-950/20 to-slate-950">
+                <h3 data-i18n="sk_title" class="text-xs font-orbitron text-amber-300 font-bold flex items-center gap-1.5">
+                    <i data-lucide="shield-alert" class="w-4 h-4 text-amber-400"></i> SYARAT & KETENTUAN WITHDRAW
+                </h3>
+                <div class="space-y-1.5 text-[11px]">
+                    <div class="flex items-center justify-between bg-black/40 p-2 rounded border border-white/5">
+                        <span data-i18n="sk_rule1" class="text-gray-300">1. Saldo Min. $50.00 USDT:</span>
+                        <span id="reqBalanceStatus" class="font-bold text-red-400 font-orbitron">FAIL</span>
+                    </div>
+                    <div class="flex items-center justify-between bg-black/40 p-2 rounded border border-white/5">
+                        <span data-i18n="sk_rule2" class="text-gray-300">2. Beli Karakter (Min. $2.00):</span>
+                        <span id="reqBuyCharStatus" class="font-bold text-red-400 font-orbitron">FAIL</span>
+                    </div>
+                    <div class="flex items-center justify-between bg-black/40 p-2 rounded border border-white/5">
+                        <span data-i18n="sk_rule3" class="text-gray-300">3. Verifikasi Akun ($1.00 BNB/GRAM):</span>
+                        <div class="flex items-center gap-1.5">
+                            <span id="reqVerifyStatus" class="font-bold text-red-400 font-orbitron">UNVERIFIED</span>
+                            <button id="btnPayVerify" onclick="openDepositModal(1.00, 'Verifikasi Akun Withdraw')" class="px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-black font-orbitron font-extrabold rounded text-[9px] shadow">
+                                BAYAR $1
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Withdrawal Form -->
+            <div class="glass-panel p-4 rounded-xl border border-white/10 space-y-3">
+                <h3 data-i18n="withdraw_form" class="text-xs font-orbitron text-gray-300 tracking-wider">FORMULIR PENARIKAN HADIAH</h3>
+                
+                <div>
+                    <label data-i18n="payment_method" class="text-[11px] text-gray-400 block mb-1">Jaringan Koin USDT:</label>
+                    <select id="withdrawMethod" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-purple-500">
+                        <option value="usdt_bep20">USDT (BEP20 / BNB Chain)</option>
+                        <option value="usdt_trc20">USDT (TRC20 / TRON Network)</option>
+                        <option value="usdt_ton">USDT (TON Network / Telegram Wallet)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label data-i18n="account_number" class="text-[11px] text-gray-400 block mb-1">Alamat Wallet USDT Anda:</label>
+                    <input type="text" id="withdrawAccount" placeholder="Alamat Wallet USDT Anda (0x... / T... / UQ...)" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-purple-500">
+                </div>
+
+                <div>
+                    <label data-i18n="withdraw_amount" class="text-[11px] text-gray-400 block mb-1">Jumlah Penarikan ($):</label>
+                    <input type="number" id="withdrawAmount" placeholder="50.00" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-purple-500">
+                </div>
+
+                <button onclick="processWithdraw()" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-slate-950 font-orbitron font-extrabold rounded-xl text-xs shadow-lg active:scale-95 transition-all">
+                    <span data-i18n="btn_submit_withdraw">AJUKAN PENARIKAN UANG ($50 MIN)</span>
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- BOTTOM NAVIGATION -->
+    <nav class="w-full glass-panel border-t border-white/10 px-2 py-2 z-20 flex justify-around items-center">
+        <button onclick="switchTab('game')" id="nav-game" class="nav-btn flex flex-col items-center space-y-1 text-pink-400">
+            <i data-lucide="gamepad-2" class="w-5 h-5"></i>
+            <span data-i18n="nav_game" class="text-[9px] font-semibold">Game</span>
+        </button>
+
+        <button onclick="switchTab('shop')" id="nav-shop" class="nav-btn flex flex-col items-center space-y-1 text-gray-400 hover:text-white">
+            <i data-lucide="sparkles" class="w-5 h-5"></i>
+            <span data-i18n="nav_shop" class="text-[9px] font-semibold">Karakter</span>
+        </button>
+
+        <button onclick="switchTab('referral')" id="nav-referral" class="nav-btn flex flex-col items-center space-y-1 text-gray-400 hover:text-white">
+            <i data-lucide="users" class="w-5 h-5"></i>
+            <span data-i18n="nav_referral" class="text-[9px] font-semibold">Referral</span>
+        </button>
+
+        <button onclick="switchTab('earn')" id="nav-earn" class="nav-btn flex flex-col items-center space-y-1 text-gray-400 hover:text-white">
+            <i data-lucide="gift" class="w-5 h-5"></i>
+            <span data-i18n="nav_earn" class="text-[9px] font-semibold">Tugas</span>
+        </button>
+
+        <button onclick="switchTab('wallet')" id="nav-wallet" class="nav-btn flex flex-col items-center space-y-1 text-gray-400 hover:text-white">
+            <i data-lucide="wallet" class="w-5 h-5"></i>
+            <span data-i18n="nav_wallet" class="text-[9px] font-semibold">Dompet</span>
+        </button>
+    </nav>
+
+    <!-- ADMIN PAYMENT RECEIVER MODAL (BNB & GRAM/TON WALLET ONLY) -->
+    <div id="depositModal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="glass-panel p-5 rounded-2xl max-w-xs w-full border border-purple-500/50 space-y-3 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-white/10 pb-2">
+                <div class="font-orbitron font-bold text-amber-300 text-xs" id="depItemName">PEMBAYARAN DEPOSIT</div>
+                <button onclick="closeDepositModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+
+            <p class="text-[11px] text-gray-300 leading-relaxed">
+                Silakan lakukan transfer setara nilai <strong id="depAmountText" class="text-emerald-400 font-orbitron">$0.00 USD</strong> menggunakan salah satu koin crypto resmi milik Admin di bawah ini:
+            </p>
+
+            <!-- Admin Receiver Crypto Wallet Addresses -->
+            <div class="bg-slate-900/90 p-3 rounded-xl border border-white/10 text-left space-y-3 text-[10px]">
+                <div>
+                    <span class="text-amber-400 font-bold block mb-0.5">🟡 BNB (BEP20 Network):</span>
+                    <div class="bg-black/60 p-2 rounded border border-amber-500/30 font-mono text-amber-200 font-bold select-all break-all text-[9px]">
+                        0x03694c1eeab5dc309664e0a5f9fe0e712d51a4aa
+                    </div>
+                </div>
+                <div>
+                    <span class="text-cyan-400 font-bold block mb-0.5">💎 GRAM / TON (Telegram Ecosystem):</span>
+                    <div class="bg-black/60 p-2 rounded border border-cyan-500/30 font-mono text-cyan-200 font-bold select-all break-all text-[9px]">
+                        UQD5ycFRUXNSA2AGPs7XKAoBJ5BroBISVyVkXmlYeN0TNNTy
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-[10px] text-gray-400 text-center italic">
+                *Sistem memverifikasi transaksi BNB / GRAM Anda secara otomatis setelah ditransfer.
+            </div>
+
+            <button onclick="confirmDepositPayment()" class="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-slate-950 font-orbitron font-extrabold text-xs rounded-xl shadow-md">
+                SAYA SUDAH BAYAR / TRANSFER
+            </button>
+        </div>
+    </div>
+
+    <!-- GENERAL NOTIFICATION MODAL -->
+    <div id="customModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="glass-panel p-5 rounded-2xl max-w-xs w-full text-center border border-purple-500/40 space-y-3 shadow-2xl">
+            <div id="modalTitle" class="font-orbitron font-bold text-amber-300 text-sm tracking-wide">INFORMASI</div>
+            <p id="modalMessage" class="text-xs text-gray-300 leading-relaxed">Pesan notifikasi...</p>
+            <button onclick="closeModal()" class="w-full py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-orbitron font-bold text-xs rounded-xl shadow-md">
+                OK
+            </button>
+        </div>
+    </div>
+
+    <!-- AUDIO & GAME LOGIC -->
+    <script>
+        lucide.createIcons();
+
+        // -------------------------------------------------------------
+        // MULTI-LANGUAGE DICTIONARY (7 LANGUAGES)
+        // -------------------------------------------------------------
+        const i18n = {
+            id: {
+                bonus_earning: "Bonus",
+                game_desc: "Kendalikan dewi cantik pilihanmu, lompati rintangan, kumpulkan Cyber Gems & tukar ke Uang Nyata (USDT)!",
+                btn_start: "MULAI PETUALANGAN",
+                control_hint: "Kontrol: Ketuk Layar / Spasi",
+                game_over: "MISI SELESAI",
+                distance: "Jarak Tempuh:",
+                cash_earned: "Hasil Cash:",
+                btn_play_again: "MAIN LAGI",
+                btn_tap_jump: "TEKAN UNTUK MELOMPAT",
+                shop_title: "SQUAD DEWI ORIENTAL",
+                shop_subtitle: "Pilih karakter favoritmu untuk melipatgandakan penghasilan USDT!",
+                btn_buy: "BELI SEHARGA",
+                ref_title: "PROGRAM REFERRAL",
+                ref_subtitle: "Undang teman terbanyak dan menangkan total bonus ratusan USD!",
+                your_link: "LINK UNDANGAN ANDA",
+                friend: "Teman",
+                total_invites: "Total Undangan:",
+                btn_copy: "SALIN",
+                btn_share_tg: "BAGIKAN KE TELEGRAM",
+                leaderboard_title: "🏆 TOP PENGUNDANG",
+                tasks_title: "BONUS KONTINU & TUGAS",
+                tasks_subtitle: "Main secara konsisten untuk menambah bonus saldo Uang Nyata!",
+                daily_checkin: "ABSEN HARIAN",
+                daily_desc: "Klaim hadiah login harian!",
+                btn_claim: "KLAIM",
+                wallet_title: "DOMPET & PENARIKAN (USDT)",
+                wallet_subtitle: "Tarik hasil bermain game langsung ke dompet crypto USDT Anda!",
+                total_balance: "TOTAL SALDO TERKUMPUL",
+                min_withdraw: "Minimum Penarikan:",
+                sk_title: "SYARAT & KETENTUAN WITHDRAW",
+                sk_rule1: "1. Saldo Min. $50.00 USDT:",
+                sk_rule2: "2. Beli Karakter (Min. $2.00):",
+                sk_rule3: "3. Verifikasi Akun ($1.00 BNB/GRAM):",
+                withdraw_form: "FORMULIR PENARIKAN HADIAH",
+                payment_method: "Jaringan Koin USDT:",
+                account_number: "Alamat Wallet USDT Anda:",
+                withdraw_amount: "Jumlah Penarikan ($):",
+                btn_submit_withdraw: "AJUKAN PENARIKAN UANG ($50 MIN)",
+                nav_game: "Game",
+                nav_shop: "Karakter",
+                nav_referral: "Referral",
+                nav_earn: "Tugas",
+                nav_wallet: "Dompet",
+                char1_desc: "Dewi rembulan bergaun sutra putih-emas bersinar dengan aura ethereal lincah.",
+                char2_desc: "Pendekar bergaun armor merah-hitam berani berhiaskan pedang emas agung.",
+                char3_desc: "Dewi bunga bergaun ungu lavender berkipas sakura. Memberikan profit maksimal!"
+            },
+            en: {
+                bonus_earning: "Bonus",
+                game_desc: "Control your oriental goddess, jump over obstacles, collect Cyber Gems & cash out real USDT!",
+                btn_start: "START RUNNING",
+                control_hint: "Control: Tap Screen / Space",
+                game_over: "MISSION OVER",
+                distance: "Distance:",
+                cash_earned: "Cash Earned:",
+                btn_play_again: "PLAY AGAIN",
+                btn_tap_jump: "TAP TO JUMP",
+                shop_title: "ORIENTAL GODDESS SQUAD",
+                shop_subtitle: "Choose your goddess to multiply real USDT earnings!",
+                btn_buy: "BUY FOR",
+                ref_title: "REFERRAL PROGRAM",
+                ref_subtitle: "Invite friends and win hundreds of USD bonuses!",
+                your_link: "YOUR INVITE LINK",
+                friend: "Friend",
+                total_invites: "Total Invites:",
+                btn_copy: "COPY",
+                btn_share_tg: "SHARE TO TELEGRAM",
+                leaderboard_title: "🏆 TOP REFERRERS",
+                tasks_title: "CONTINUOUS BONUSES & TASKS",
+                tasks_subtitle: "Play daily to earn extra cash rewards!",
+                daily_checkin: "DAILY CHECK-IN",
+                daily_desc: "Claim your daily login reward!",
+                btn_claim: "CLAIM",
+                wallet_title: "WALLET & WITHDRAWAL (USDT)",
+                wallet_subtitle: "Withdraw your earnings directly to your USDT crypto wallet!",
+                total_balance: "TOTAL BALANCE EARNED",
+                min_withdraw: "Min Withdrawal:",
+                sk_title: "WITHDRAWAL REQUIREMENTS",
+                sk_rule1: "1. Min. Balance $50.00 USDT:",
+                sk_rule2: "2. Buy Character (Min. $2.00):",
+                sk_rule3: "3. Account Verification ($1.00 BNB/GRAM):",
+                withdraw_form: "WITHDRAWAL FORM",
+                payment_method: "USDT Coin Network:",
+                account_number: "Your USDT Wallet Address:",
+                withdraw_amount: "Withdraw Amount ($):",
+                btn_submit_withdraw: "SUBMIT WITHDRAWAL ($50 MIN)",
+                nav_game: "Game",
+                nav_shop: "Characters",
+                nav_referral: "Referral",
+                nav_earn: "Tasks",
+                nav_wallet: "Wallet",
+                char1_desc: "Celestial moon goddess in luminous white-gold silk gown.",
+                char2_desc: "Brave warrior in crimson-black dragon armor with golden sword.",
+                char3_desc: "Empress goddess in lavender silk dress holding cherry blossom fan."
+            },
+            ru: {
+                bonus_earning: "Бонус",
+                game_desc: "Управляйте восточной богиней, преодолевайте препятствия и зарабатывайте реальные USDT!",
+                btn_start: "НАЧАТЬ ИГРУ",
+                control_hint: "Управление: Нажатие / Пробел",
+                game_over: "МИССИЯ ОКОНЧЕНА",
+                distance: "Дистанция:",
+                cash_earned: "Заработано:",
+                btn_play_again: "ИГРАТЬ СНОВА",
+                btn_tap_jump: "НАЖМИТЕ ДЛЯ ПРЫЖКА",
+                shop_title: "ВОСТОЧНЫЕ БОГИНИ",
+                shop_subtitle: "Выберите богиню для увеличения дохода!",
+                btn_buy: "КУПИТЬ ЗА",
+                ref_title: "РЕФЕРАЛЬНАЯ ПРОГРАММА",
+                ref_subtitle: "Приглашайте друзей и выигрывайте денежные бонусы!",
+                your_link: "ВАША ССЫЛКА",
+                friend: "Друг",
+                total_invites: "Всего рефералов:",
+                btn_copy: "КОПИРОВАТЬ",
+                btn_share_tg: "ПОДЕЛИТЬСЯ В TELEGRAM",
+                leaderboard_title: "🏆 ТОП РЕФЕРАЛОВ",
+                tasks_title: "БОНУСЫ И ЗАДАНИЯ",
+                tasks_subtitle: "Играйте ежедневно для получения дополнительных наград!",
+                daily_checkin: "ЕЖЕДНЕВНЫЙ ВХОД",
+                daily_desc: "Заберите бонус за вход!",
+                btn_claim: "ЗАБРАТЬ",
+                wallet_title: "КОШЕЛЕК И ВЫВОД (USDT)",
+                wallet_subtitle: "Выводите деньги прямо на ваш USDT кошелек!",
+                total_balance: "ОБЩИЙ БАЛАНС",
+                min_withdraw: "Мин. вывод:",
+                sk_title: "УСЛОВИЯ ВЫВОДА",
+                sk_rule1: "1. Мин. баланс $50.00 USDT:",
+                sk_rule2: "2. Покупка персонажа (мин. $2.00):",
+                sk_rule3: "3. Верификация аккаунта ($1.00 BNB/GRAM):",
+                withdraw_form: "ФОРМА ВЫВОДА",
+                payment_method: "Сеть USDT:",
+                account_number: "Ваш USDT адрес:",
+                withdraw_amount: "Сумма вывода ($):",
+                btn_submit_withdraw: "ВЫВЕСТИ СРЕДСТВА ($50 МИН)",
+                nav_game: "Игра",
+                nav_shop: "Героини",
+                nav_referral: "Рефералы",
+                nav_earn: "Задания",
+                nav_wallet: "Кошелек",
+                char1_desc: "Небесная богиня луны в бело-золотом шелковом платье.",
+                char2_desc: "Воительница в красно-черных доспехах с золотым мечом.",
+                char3_desc: "Императрица в лавандовом платье с веером сакуры."
+            },
+            es: {
+                bonus_earning: "Bono",
+                game_desc: "¡Controla a tu diosa oriental, esquiva obstáculos y gana dinero real USDT!",
+                btn_start: "INICIAR JUEGO",
+                control_hint: "Control: Tocar pantalla / Espacio",
+                game_over: "MISIÓN FINALIZADA",
+                distance: "Distancia:",
+                cash_earned: "Dinero ganado:",
+                btn_play_again: "JUGAR DE NUEVO",
+                btn_tap_jump: "TOCA PARA SALTAR",
+                shop_title: "DIOSAS ORIENTALES",
+                shop_subtitle: "¡Elige tu diosa para multiplicar tus ganancias!",
+                btn_buy: "COMPRAR POR",
+                ref_title: "PROGRAMA DE REFERIDOS",
+                ref_subtitle: "¡Invita amigos y gana cientos de dólares en bonos!",
+                your_link: "TU ENLACE DE INVITACIÓN",
+                friend: "Amigo",
+                total_invites: "Invitaciones totales:",
+                btn_copy: "COPIAR",
+                btn_share_tg: "COMPARTIR EN TELEGRAM",
+                leaderboard_title: "🏆 TOP REFERIDOS",
+                tasks_title: "TAREAS Y BONOS",
+                tasks_subtitle: "¡Juega a diario para ganar dinero extra!",
+                daily_checkin: "REGISTRO DIARIO",
+                daily_desc: "¡Reclama tu bono diario!",
+                btn_claim: "RECLAMAR",
+                wallet_title: "BILLETERA Y RETIRO (USDT)",
+                wallet_subtitle: "¡Retira tus ganancias a tu billetera cripto USDT!",
+                total_balance: "BALANCE TOTAL",
+                min_withdraw: "Mínimo de retiro:",
+                sk_title: "REQUISITOS DE RETIRO",
+                sk_rule1: "1. Balance Mín. $50.00 USDT:",
+                sk_rule2: "2. Comprar Personaje (Mín. $2.00):",
+                sk_rule3: "3. Verificación de Cuenta ($1.00 BNB/GRAM):",
+                withdraw_form: "FORMULARIO DE RETIRO",
+                payment_method: "Red USDT:",
+                account_number: "Dirección de Billetera USDT:",
+                withdraw_amount: "Monto a retirar ($):",
+                btn_submit_withdraw: "SOLICITAR RETIRO ($50 MÍN)",
+                nav_game: "Juego",
+                nav_shop: "Diosas",
+                nav_referral: "Referidos",
+                nav_earn: "Tareas",
+                nav_wallet: "Billetera",
+                char1_desc: "Diosa celestial de la luna en vestido de seda blanco y dorado.",
+                char2_desc: "Guerrera con armadura roja y negra con espada dorada.",
+                char3_desc: "Emperatriz con vestido de seda lavanda y abanico de sakura."
+            },
+            pt: {
+                bonus_earning: "Bônus",
+                game_desc: "Controle sua deusa oriental, desvie de obstáculos e ganhe USDT real!",
+                btn_start: "INICIAR JOGO",
+                control_hint: "Controle: Toque na tela / Espaço",
+                game_over: "MISSÃO CONCLUÍDA",
+                distance: "Distância:",
+                cash_earned: "Ganhos:",
+                btn_play_again: "JOGAR NOVAMENTE",
+                btn_tap_jump: "TOQUE PARA PULAR",
+                shop_title: "ESQUADRÃO DE DEUSAS ORIENTAIS",
+                shop_subtitle: "Escolha sua deusa para multiplicar seus ganhos!",
+                btn_buy: "COMPRAR POR",
+                ref_title: "PROGRAMA DE INDICAÇÃO",
+                ref_subtitle: "Convide amigos e ganhe bônus em dinheiro real!",
+                your_link: "SEU LINK DE CONVITE",
+                friend: "Amigo",
+                total_invites: "Total de convites:",
+                btn_copy: "COPIAR",
+                btn_share_tg: "COMPARTILHAR NO TELEGRAM",
+                leaderboard_title: "🏆 TOP INDICADORES",
+                tasks_title: "BÔNUS E TAREFAS",
+                tasks_subtitle: "Jogue diariamente para ganhar dinheiro extra!",
+                daily_checkin: "LOGIN DIÁRIO",
+                daily_desc: "Resgate seu bônus diário!",
+                btn_claim: "RESGATAR",
+                wallet_title: "CARTEIRA E SAQUE (USDT)",
+                wallet_subtitle: "Saque seus ganhos direto para sua carteira USDT!",
+                total_balance: "SALDO TOTAL ACUMULADO",
+                min_withdraw: "Saque Mínimo:",
+                sk_title: "REQUISITOS DE SAQUE",
+                sk_rule1: "1. Saldo Mín. $50.00 USDT:",
+                sk_rule2: "2. Comprar Personagem (Mín. $2.00):",
+                sk_rule3: "3. Verificação de Conta ($1.00 BNB/GRAM):",
+                withdraw_form: "FORMULÁRIO DE SAQUE",
+                payment_method: "Rede USDT:",
+                account_number: "Endereço da Carteira USDT:",
+                withdraw_amount: "Valor do Saque ($):",
+                btn_submit_withdraw: "SOLICITAR SAQUE ($50 MÍN)",
+                nav_game: "Jogo",
+                nav_shop: "Deusas",
+                nav_referral: "Indicar",
+                nav_earn: "Tarefas",
+                nav_wallet: "Carteira",
+                char1_desc: "Deusa celestial da lua em vestido de seda branco e dourado.",
+                char2_desc: "Guerreira com armadura vermelha e preta com espada dourada.",
+                char3_desc: "Imperatriz em vestido lavanda com leque de sakura."
+            },
+            zh: {
+                bonus_earning: "加成",
+                game_desc: "操控东方绝色战姬，跃过障碍，收集宝石并兑换真实 USDT 美金！",
+                btn_start: "开始 TAP 试炼",
+                control_hint: "操作: 点击屏幕 / 空格键",
+                game_over: "试炼结束",
+                distance: "奔跑距离:",
+                cash_earned: "获得 USDT:",
+                btn_play_again: "再玩一次",
+                btn_tap_jump: "点击跳跃",
+                shop_title: "东方仙侠女神 Squad",
+                shop_subtitle: "解锁专属女神角色，让您的 USDT 收益翻倍！",
+                btn_buy: "购买价格",
+                ref_title: "邀请好友奖励",
+                ref_subtitle: "邀请最多好友，赢取数百美金大奖！",
+                your_link: "您的专属邀请链接",
+                friend: "好友",
+                total_invites: "已邀请人数:",
+                btn_copy: "复制链接",
+                btn_share_tg: "分享到 Telegram",
+                leaderboard_title: "🏆 邀请排行榜",
+                tasks_title: "日常任务与奖励",
+                tasks_subtitle: "每日坚持游玩，获取丰厚现金回报！",
+                daily_checkin: "每日签到",
+                daily_desc: "领取今日登录奖励！",
+                btn_claim: "领取",
+                wallet_title: "钱包与提现 (USDT)",
+                wallet_subtitle: "将收益直接提现至您的 USDT 加密钱包！",
+                total_balance: "当前总收益",
+                min_withdraw: "最低提现门槛:",
+                sk_title: "提现资格与条件 (S&K)",
+                sk_rule1: "1. 收益余额满 $50.00 USDT:",
+                sk_rule2: "2. 解锁角色 (最低 $2.00):",
+                sk_rule3: "3. 账号验证 ($1.00 BNB/GRAM):",
+                withdraw_form: "提现申请表",
+                payment_method: "USDT 网络:",
+                account_number: "您的 USDT 钱包地址:",
+                withdraw_amount: "提现金额 ($):",
+                btn_submit_withdraw: "提交提现申请 (满 $50)",
+                nav_game: "游戏",
+                nav_shop: "女神",
+                nav_referral: "邀请",
+                nav_earn: "任务",
+                nav_wallet: "钱包",
+                char1_desc: "白月光仙子，飘逸白金金丝羽衣。",
+                char2_desc: "红颜女将，红黑龙鳞战甲佩金纹佩剑。",
+                char3_desc: "紫月帝女，梦幻紫罗兰羽衣手持樱花扇。"
+            }
+        };
+
+        let currentLang = 'id';
+
+        function changeLanguage(langKey) {
+            if (!i18n[langKey]) return;
+            currentLang = langKey;
+            
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18n[langKey][key]) {
+                    el.innerText = i18n[langKey][key];
+                }
+            });
+            updateUI();
+        }
+
+        // State Variables
+        let gameState = {
+            usdBalance: 0.00,
+            gems: 0,
+            activeCharacter: 1,
+            unlockedCharacters: [1],
+            purchasedPaidCharacter: false,
+            isVerifiedUser: false,
+            referralsCount: 0,
+            maxDistanceAchieved: 0,
+            dailyClaimed: false
+        };
+
+        let pendingDepositAction = null;
+
+        const CHARACTERS = {
+            1: { name: 'Bai Lian', costume: 'Celestial Goddess', step: 1, price: 2.00, multiplier: 1.2, emoji: '🤍', hairColor: '#334155', outfitColor: '#f8fafc', accentColor: '#fbbf24' },
+            2: { name: 'Hong Yan', costume: 'Crimson Warrior', step: 2, price: 3.50, multiplier: 1.8, emoji: '⚔️', hairColor: '#1e293b', outfitColor: '#dc2626', accentColor: '#fbbf24' },
+            3: { name: 'Zi Yue', costume: 'Lavender Empress', step: 3, price: 5.00, multiplier: 2.5, emoji: '🪭', hairColor: '#0f172a', outfitColor: '#c084fc', accentColor: '#f472b6' }
+        };
+
+        // --- WEB AUDIO API SYNTHESIZER ---
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new AudioCtx();
+        }
+
+        function playSound(type) {
+            if (!audioCtx) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'jump') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(320, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(650, audioCtx.currentTime + 0.15);
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.15);
+                } else if (type === 'gem') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(850, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(1250, audioCtx.currentTime + 0.08);
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.15);
+                } else if (type === 'fail') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(90, audioCtx.currentTime + 0.3);
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.3);
+                }
+            } catch (e) { console.log(e); }
+        }
+
+        function switchTab(tabName) {
+            initAudio();
+            ['game', 'shop', 'referral', 'earn', 'wallet'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                document.getElementById(`nav-${t}`).classList.remove('text-pink-400');
+                document.getElementById(`nav-${t}`).classList.add('text-gray-400');
+            });
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            document.getElementById(`nav-${tabName}`).classList.add('text-pink-400');
+            document.getElementById(`nav-${tabName}`).classList.remove('text-gray-400');
+        }
+
+        function updateUI() {
+            document.getElementById('realUsdBalance').innerText = gameState.usdBalance.toFixed(2);
+            document.getElementById('walletBigUsd').innerText = gameState.usdBalance.toFixed(2);
+            document.getElementById('inGameGems').innerText = gameState.gems;
+
+            const curChar = CHARACTERS[gameState.activeCharacter];
+            document.getElementById('topAvatarVisual').innerText = curChar.emoji;
+            document.getElementById('playerActiveName').innerText = curChar.name;
+            document.getElementById('topMultiplierText').innerText = curChar.multiplier + 'x';
+            document.getElementById('playerActiveTierTag').innerText = `STEP ${curChar.step}`;
+            document.getElementById('topAvatarContainer').style.borderColor = curChar.outfitColor;
+
+            // Shop Buttons Status
+            [1, 2, 3].forEach(step => {
+                const btn = document.getElementById(`btnBuyStep${step}`);
+                if (gameState.unlockedCharacters.includes(step)) {
+                    if (gameState.activeCharacter === step) {
+                        btn.innerText = "USED / DIGUNAKAN";
+                        btn.className = "w-full py-2 bg-slate-800 text-gray-400 font-orbitron font-bold rounded-lg text-xs cursor-default border border-white/5";
+                        btn.onclick = null;
+                    } else {
+                        btn.innerText = "EQUIP / GUNAKAN";
+                        btn.className = "w-full py-2 bg-purple-600 hover:bg-purple-500 text-white font-orbitron font-bold rounded-lg text-xs shadow-md";
+                        btn.onclick = () => selectCharacter(step);
+                    }
+                }
+            });
+
+            document.getElementById('referralCountText').innerText = `${gameState.referralsCount}`;
+
+            // S&K Checks
+            const reqBalanceEl = document.getElementById('reqBalanceStatus');
+            if (gameState.usdBalance >= 50.00) {
+                reqBalanceEl.innerText = "OK ($" + gameState.usdBalance.toFixed(2) + ")";
+                reqBalanceEl.className = "font-bold text-emerald-400 font-orbitron";
+            } else {
+                reqBalanceEl.innerText = "FAIL ($" + gameState.usdBalance.toFixed(2) + "/$50)";
+                reqBalanceEl.className = "font-bold text-red-400 font-orbitron";
+            }
+
+            const reqBuyEl = document.getElementById('reqBuyCharStatus');
+            if (gameState.purchasedPaidCharacter) {
+                reqBuyEl.innerText = "PASSED";
+                reqBuyEl.className = "font-bold text-emerald-400 font-orbitron";
+            } else {
+                reqBuyEl.innerText = "NOT YET ($2 MIN)";
+                reqBuyEl.className = "font-bold text-red-400 font-orbitron";
+            }
+
+            const reqVerifyEl = document.getElementById('reqVerifyStatus');
+            const btnPayVerify = document.getElementById('btnPayVerify');
+            if (gameState.isVerifiedUser) {
+                reqVerifyEl.innerText = "VERIFIED";
+                reqVerifyEl.className = "font-bold text-emerald-400 font-orbitron";
+                btnPayVerify.classList.add('hidden');
+            } else {
+                reqVerifyEl.innerText = "UNVERIFIED";
+                reqVerifyEl.className = "font-bold text-red-400 font-orbitron";
+                btnPayVerify.classList.remove('hidden');
+            }
+        }
+
+        function selectCharacter(step) {
+            initAudio();
+            if (gameState.unlockedCharacters.includes(step)) {
+                gameState.activeCharacter = step;
+                updateUI();
+            }
+        }
+
+        // --- PAYMENT RECEIVER MODAL (DIRECT PAYMENT TO BNB / GRAM ADDRESSES) ---
+        function openDepositModal(priceUsd, title) {
+            initAudio();
+            document.getElementById('depItemName').innerText = title.toUpperCase();
+            document.getElementById('depAmountText').innerText = `$${priceUsd.toFixed(2)} USD`;
+            pendingDepositAction = { price: priceUsd, title: title };
+            document.getElementById('depositModal').classList.remove('hidden');
+        }
+
+        function closeDepositModal() {
+            document.getElementById('depositModal').classList.add('hidden');
+        }
+
+        function confirmDepositPayment() {
+            initAudio();
+            closeDepositModal();
+
+            if (!pendingDepositAction) return;
+            const { price, title } = pendingDepositAction;
+
+            if (price === 1.00) {
+                gameState.isVerifiedUser = true;
+                showModal("VERIFIKASI TERKIRIM", "Transfer verifikasi $1.00 Anda diterima! Akun Anda telah TERVERIFIKASI untuk penarikan.");
+            } else {
+                if (price === 2.00) gameState.unlockedCharacters.push(1);
+                else if (price === 3.50) gameState.unlockedCharacters.push(2);
+                else if (price === 5.00) gameState.unlockedCharacters.push(3);
+
+                gameState.purchasedPaidCharacter = true;
+                showModal("PEMBELIAN SUKSES!", `Terima kasih! Transfer $${price.toFixed(2)} USD dikonfirmasi. Dewi ${title} berhasil dibuka!`);
+            }
+            updateUI();
+        }
+
+        function copyReferralLink() {
+            initAudio();
+            const input = document.getElementById('referralLinkInput');
+            input.select();
+            document.execCommand('copy');
+            showModal("LINK DISALIN", "Link referral Anda telah disalin! Bagikan ke teman atau grup.");
+        }
+
+        function simulatedInviteFriend() {
+            initAudio();
+            gameState.referralsCount += 1;
+            gameState.usdBalance += 1.50;
+            showModal("TEMAN BERGABUNG!", "Seseorang mendaftar menggunakan referral Anda! Bonus +$1.50 USDT ditambahkan.");
+            updateUI();
+        }
+
+        function claimDailyBonus() {
+            initAudio();
+            if (gameState.dailyClaimed) {
+                showModal("INFORMASI", "Bonus harian sudah diklaim hari ini!");
+                return;
+            }
+            gameState.usdBalance += 0.50;
+            gameState.dailyClaimed = true;
+            document.getElementById('btnDailyClaim').disabled = true;
+            document.getElementById('btnDailyClaim').className = "px-3.5 py-2 bg-slate-800 text-gray-500 font-orbitron font-bold rounded-lg text-xs cursor-not-allowed";
+            showModal("BONUS HARIAN", "Bonus login +$0.50 USDT ditambahkan ke dompet!");
+            updateUI();
+        }
+
+        function processWithdraw() {
+            initAudio();
+            const amount = parseFloat(document.getElementById('withdrawAmount').value);
+            const account = document.getElementById('withdrawAccount').value.trim();
+
+            if (!account) {
+                showModal("INPUT ERROR", "Silakan masukkan alamat wallet USDT Anda!");
+                return;
+            }
+            if (isNaN(amount) || amount < 50.00) {
+                showModal("S&K BELUM CUKUP", "Batas minimal penarikan adalah $50.00 USDT!");
+                return;
+            }
+            if (amount > gameState.usdBalance) {
+                showModal("SALDO KURANG", "Saldo USDT Anda belum mencukupi!");
+                return;
+            }
+            if (!gameState.purchasedPaidCharacter) {
+                showModal("S&K PENARIKAN", "Anda wajib pernah membeli minimal 1 karakter (Min. $2.00) untuk membuka fitur penarikan!");
+                return;
+            }
+            if (!gameState.isVerifiedUser) {
+                showModal("S&K PENARIKAN", "Akun Anda belum terverifikasi! Bayar verifikasi sebesar $1.00 BNB/GRAM terlebih dahulu.");
+                return;
+            }
+
+            // AUTO-DISTRIBUTION QUEUE SYSTEM FOR ACTIVE PLAYERS
+            gameState.usdBalance -= amount;
+            updateUI();
+            showModal("PENARIKAN TERKIRIM KE SISTEM DISTRIBUSI", `Permintaan penarikan $${amount.toFixed(2)} USDT ke wallet ${account} telah disetujui dan siap ditransfer langsung oleh sistem!`);
+        }
+
+        function showModal(title, msg) {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMessage').innerText = msg;
+            document.getElementById('customModal').classList.remove('hidden');
+        }
+        function closeModal() {
+            document.getElementById('customModal').classList.add('hidden');
+        }
+
+        // =================================================================
+        // --- GAME ENGINE & ANCIENT GODDESS SPRITE ANIMATION ---
+        // =================================================================
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let isRunning = false;
+        let animationFrameId = null;
+
+        let runner = { x: 50, y: 0, width: 34, height: 62, dy: 0, gravity: 0.65, jumpPower: -11.5, grounded: false };
+        let obstacles = [];
+        let gems = [];
+        let distance = 0;
+        let collectedGemsRun = 0;
+        let gameSpeed = 4.5;
+        let spawnTimer = 0;
+        let walkCycleFrame = 0;
+
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            runner.y = canvas.height - 82;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function jump() {
+            if (!isRunning) return;
+            initAudio();
+            if (runner.grounded) {
+                runner.dy = runner.jumpPower;
+                runner.grounded = false;
+                playSound('jump');
+            }
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'ArrowUp') jump();
+        });
+        document.getElementById('canvasJumpBtn').addEventListener('click', jump);
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            jump();
+        }, { passive: false });
+
+        document.getElementById('startGameBtn').addEventListener('click', () => {
+            initAudio();
+            document.getElementById('gameStartOverlay').classList.add('hidden');
+            document.getElementById('gameOverOverlay').classList.add('hidden');
+            resetGame();
+            isRunning = true;
+            gameLoop();
+        });
+
+        document.getElementById('restartGameBtn').addEventListener('click', () => {
+            initAudio();
+            document.getElementById('gameOverOverlay').classList.add('hidden');
+            resetGame();
+            isRunning = true;
+            gameLoop();
+        });
+
+        function resetGame() {
+            resizeCanvas();
+            runner.y = canvas.height - 82;
+            runner.dy = 0;
+            runner.grounded = true;
+            obstacles = [];
+            gems = [];
+            distance = 0;
+            collectedGemsRun = 0;
+            gameSpeed = 4.8;
+            spawnTimer = 0;
+            walkCycleFrame = 0;
+        }
+
+        function endGame() {
+            isRunning = false;
+            playSound('fail');
+            cancelAnimationFrame(animationFrameId);
+
+            const charMultiplier = CHARACTERS[gameState.activeCharacter].multiplier;
+            const cashEarned = ((distance * 0.002) + (collectedGemsRun * 0.05)) * charMultiplier;
+            
+            gameState.usdBalance += cashEarned;
+            gameState.gems += collectedGemsRun;
+
+            document.getElementById('resDistance').innerText = Math.floor(distance) + " m";
+            document.getElementById('resGems').innerText = collectedGemsRun;
+            document.getElementById('resCash').innerText = "+$" + cashEarned.toFixed(3) + " USDT";
+            document.getElementById('gameOverOverlay').classList.remove('hidden');
+
+            updateUI();
+        }
+
+        // --- DRAW ORIENTAL GODDESS SPRITE (MATCHING UPLOADED IMAGE 1, 2, 3) ---
+        function drawGoddessCharacter(x, y, charData, frame, isGrounded) {
+            ctx.save();
+            ctx.translate(x, y);
+
+            const legSwing = isGrounded ? Math.sin(frame * 0.25) * 14 : 8;
+            const dressWave = isGrounded ? Math.cos(frame * 0.22) * 10 : -14;
+
+            // Celestial Glow Aura
+            ctx.shadowBlur = 14;
+            ctx.shadowColor = charData.outfitColor;
+
+            // 1. Long Black Hair (Xianxia High Ponytail Style)
+            ctx.fillStyle = charData.hairColor;
+            ctx.beginPath();
+            ctx.moveTo(8, 10);
+            ctx.quadraticCurveTo(-18 + dressWave * 0.5, 20, -14 + dressWave, 48);
+            ctx.lineTo(10, 32);
+            ctx.fill();
+
+            // 2. Animated Legs (Slender High Heels)
+            ctx.strokeStyle = '#fef08a'; // Fair skin tone
+            ctx.lineWidth = 4;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(14, 38);
+            ctx.lineTo(14 - legSwing, 56);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(18, 38);
+            ctx.lineTo(18 + legSwing, 56);
+            ctx.stroke();
+
+            // Heels Accent
+            ctx.fillStyle = charData.accentColor;
+            ctx.fillRect(12 - legSwing, 53, 5, 5);
+            ctx.fillRect(16 + legSwing, 53, 5, 5);
+
+            // 3. Elegant Flowing Gown / Armor (Silk Flowing Skirt & Slit)
+            ctx.fillStyle = charData.outfitColor;
+            ctx.beginPath();
+            ctx.moveTo(10, 18);
+            ctx.lineTo(24, 18);
+            ctx.lineTo(26 + dressWave * 0.3, 40);
+            ctx.lineTo(6 - dressWave * 0.3, 42);
+            ctx.closePath();
+            ctx.fill();
+
+            // Golden Filigree / Ornaments Pattern
+            ctx.fillStyle = charData.accentColor;
+            ctx.fillRect(11, 26, 12, 3);
+            ctx.fillRect(14, 18, 6, 8);
+
+            // 4. Sleeves & Arms (Long Sleeves / Weapons)
+            ctx.strokeStyle = '#fef08a';
+            ctx.lineWidth = 3.5;
+            ctx.beginPath();
+            ctx.moveTo(12, 20);
+            ctx.lineTo(12 - legSwing * 0.7, 34);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(22, 20);
+            ctx.lineTo(22 + legSwing * 0.7, 34);
+            ctx.stroke();
+
+            // Character Specific Accessories (From Photo)
+            if (charData.step === 1) {
+                // White Silk Ribbon Wings
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.fillRect(2 - dressWave * 0.5, 22, 10, 18);
+            } else if (charData.step === 2) {
+                // Crimson Sword
+                ctx.strokeStyle = '#fbbf24';
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.moveTo(24 + legSwing * 0.7, 34);
+                ctx.lineTo(32 + legSwing * 0.7, 46);
+                ctx.stroke();
+            } else if (charData.step === 3) {
+                // Cherry Blossom Fan
+                ctx.fillStyle = '#f472b6';
+                ctx.beginPath();
+                ctx.arc(24 + legSwing * 0.7, 30, 6, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // 5. Head & Hair Ornament
+            ctx.fillStyle = '#fef08a';
+            ctx.beginPath();
+            ctx.arc(17, 10, 7.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Front Bangs
+            ctx.fillStyle = charData.hairColor;
+            ctx.beginPath();
+            ctx.arc(16, 7, 7.5, 0, Math.PI, true);
+            ctx.fill();
+
+            // Golden Crown Tiara / Headpiece
+            ctx.fillStyle = '#fbbf24';
+            ctx.beginPath();
+            ctx.moveTo(10, 3);
+            ctx.lineTo(17, -5);
+            ctx.lineTo(24, 3);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        // --- GAME LOOP ---
+        function gameLoop() {
+            if (!isRunning) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            distance += 0.16;
+            gameSpeed += 0.0006;
+            walkCycleFrame++;
+
+            const groundY = canvas.height - 24;
+
+            ctx.fillStyle = "#0f172a";
+            ctx.fillRect(0, groundY, canvas.width, 24);
+            
+            ctx.strokeStyle = "#a855f7";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, groundY);
+            ctx.lineTo(canvas.width, groundY);
+            ctx.stroke();
+
+            runner.dy += runner.gravity;
+            runner.y += runner.dy;
+
+            if (runner.y + runner.height >= groundY) {
+                runner.y = groundY - runner.height;
+                runner.dy = 0;
+                runner.grounded = true;
+            }
+
+            const activeCharObj = CHARACTERS[gameState.activeCharacter];
+            drawGoddessCharacter(runner.x, runner.y, activeCharObj, walkCycleFrame, runner.grounded);
+
+            spawnTimer++;
+            if (spawnTimer > Math.max(45, 95 - Math.floor(gameSpeed * 5))) {
+                spawnTimer = 0;
+                if (Math.random() > 0.35) {
+                    const obsHeight = 25 + Math.random() * 22;
+                    obstacles.push({ x: canvas.width, y: groundY - obsHeight, width: 18, height: obsHeight });
+                } else {
+                    gems.push({ x: canvas.width, y: groundY - 50 - Math.random() * 35, size: 16, collected: false });
+                }
+            }
+
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                let obs = obstacles[i];
+                obs.x -= gameSpeed;
+
+                ctx.fillStyle = "#ef4444";
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = "#ef4444";
+                ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+
+                if (
+                    runner.x < obs.x + obs.width &&
+                    runner.x + runner.width > obs.x &&
+                    runner.y < obs.y + obs.height &&
+                    runner.y + runner.height > obs.y
+                ) {
+                    endGame();
+                    return;
+                }
+                if (obs.x + obs.width < 0) obstacles.splice(i, 1);
+            }
+
+            for (let i = gems.length - 1; i >= 0; i--) {
+                let gem = gems[i];
+                gem.x -= gameSpeed;
+
+                ctx.save();
+                ctx.fillStyle = "#c084fc";
+                ctx.shadowBlur = 12;
+                ctx.shadowColor = "#c084fc";
+                ctx.beginPath();
+                ctx.arc(gem.x, gem.y, gem.size / 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                if (
+                    !gem.collected &&
+                    runner.x < gem.x + gem.size &&
+                    runner.x + runner.width > gem.x &&
+                    runner.y < gem.y + gem.size &&
+                    runner.y + runner.height > gem.y
+                ) {
+                    gem.collected = true;
+                    collectedGemsRun++;
+                    playSound('gem');
+                    gems.splice(i, 1);
+                    continue;
+                }
+                if (gem.x < 0) gems.splice(i, 1);
+            }
+
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "bold 12px Orbitron, sans-serif";
+            ctx.fillText(`Jarak: ${Math.floor(distance)}m`, 14, 25);
+            ctx.fillStyle = "#c084fc";
+            ctx.fillText(`Gems: ${collectedGemsRun}`, 14, 42);
+
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        updateUI();
+    </script>
+</body>
+</html>
